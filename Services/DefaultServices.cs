@@ -1,5 +1,8 @@
 using System.Text.Json;
+using System.Reflection;
+
 using Opendata.Models;
+using Opendata.Infrastructure;
 
 namespace Opendata.Services
 {
@@ -18,29 +21,9 @@ namespace Opendata.Services
                     var response = await client.GetStringAsync(url);
                     return JsonSerializer.Deserialize<T>(response);
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex)
                 {
-                    throw new Exception($"GetAsync: {Constants.INVAILD_OPERATION_EXCEPTION}");
-                }
-                catch (HttpRequestException)
-                {
-                    throw new Exception($"GetAsync: {Constants.HTTP_REQUEST_EXCEPTION}");
-                }
-                catch (TaskCanceledException)
-                {
-                    throw new Exception($"GetAsync: {Constants.TASK_CANCEL_EXCEPTION}");
-                }
-                catch (ArgumentNullException)
-                {
-                    throw new Exception($"GetAsync: {Constants.ARGUMENT_NULL_EXCEPTION}");
-                }
-                catch (JsonException)
-                {
-                    throw new Exception($"GetAsync: {Constants.JSON_EXCEPTION}");
-                }
-                catch (NotSupportedException)
-                {
-                    throw new Exception($"GetAsync: {Constants.NOT_SUPPORTED_EXCEPTION}");
+                    throw new ExceptionFilter("GetAsync", ex);
                 }
             }
         }
@@ -58,31 +41,19 @@ namespace Opendata.Services
                     var response = await client.GetStringAsync(url);
                     return JsonSerializer.Deserialize<IEnumerable<T>>(response);
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex)
                 {
-                    throw new Exception($"GetAsyncs: {Constants.INVAILD_OPERATION_EXCEPTION}");
-                }
-                catch (HttpRequestException)
-                {
-                    throw new Exception($"GetAsyncs: {Constants.HTTP_REQUEST_EXCEPTION}");
-                }
-                catch (TaskCanceledException)
-                {
-                    throw new Exception($"GetAsyncs: {Constants.TASK_CANCEL_EXCEPTION}");
-                }
-                catch (ArgumentNullException)
-                {
-                    throw new Exception($"GetAsyncs: {Constants.ARGUMENT_NULL_EXCEPTION}");
-                }
-                catch (JsonException)
-                {
-                    throw new Exception($"GetAsyncs: {Constants.JSON_EXCEPTION}");
-                }
-                catch (NotSupportedException)
-                {
-                    throw new Exception($"GetAsyncs: {Constants.NOT_SUPPORTED_EXCEPTION}");
+                    //var msg = getExceptionMessage(ex);
+                    throw new ExceptionFilter("GetAsyncs", ex);
                 }
             }
+        }
+
+
+        private void doThrow(string methName, string message)
+        {
+            var name = MethodBase.GetCurrentMethod().Name;
+            throw new Exception(name);
         }
 
         public async Task Success(string content)

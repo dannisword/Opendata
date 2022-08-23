@@ -2,6 +2,7 @@ namespace Opendata.Models
 {
     public static class Constants
     {
+        public const string  UNKNOE_EXCEPTION = "未攔截例外狀況";
         public const string INVAILD_OPERATION_EXCEPTION = "無效操作";
 
         public const string HTTP_REQUEST_EXCEPTION = "HTTP 訊息處理例外狀況";

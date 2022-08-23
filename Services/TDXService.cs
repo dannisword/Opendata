@@ -3,6 +3,7 @@ using System.Collections;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
+using System.Reflection;
 
 using Opendata.Models;
 using Opendata.Entities;
@@ -41,9 +42,13 @@ namespace Opendata.Services
                 }
                 await this.Success(sb.ToString());
             }
-            catch (Exception e)
+            catch (ExceptionFilter e)
             {
-                await this.Waring(e.Message);
+                await this.Waring($"方法: {e.MethName} 訊息: {e.Message}");
+            }
+            catch(ArgumentOutOfRangeException)
+            {
+                await this.Waring("方法: HandleDailyTimetable 訊息: 引數值超出例外狀況");
             }
         }
         /// <summary>
@@ -53,7 +58,8 @@ namespace Opendata.Services
         private async Task<AccessToken> getTDXToken()
         {
             string baseUrl = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
-
+            MethodBase m = MethodBase.GetCurrentMethod();
+            var name = m.ReflectedType.Name;
             using (HttpClient httpClient = new HttpClient())
             {
                 try
@@ -72,29 +78,9 @@ namespace Opendata.Services
                     var responseStr = await response.Content.ReadAsStringAsync();
                     return JsonSerializer.Deserialize<AccessToken>(responseStr);
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex)
                 {
-                    throw new Exception($"GetTDXToken: {Constants.INVAILD_OPERATION_EXCEPTION}");
-                }
-                catch (HttpRequestException)
-                {
-                    throw new Exception($"GetTDXToken: {Constants.HTTP_REQUEST_EXCEPTION}");
-                }
-                catch (TaskCanceledException)
-                {
-                    throw new Exception($"GetTDXToken: {Constants.TASK_CANCEL_EXCEPTION}");
-                }
-                catch (ArgumentNullException)
-                {
-                    throw new Exception($"GetTDXToken: {Constants.ARGUMENT_NULL_EXCEPTION}");
-                }
-                catch (JsonException)
-                {
-                    throw new Exception($"GetTDXToken: {Constants.JSON_EXCEPTION}");
-                }
-                catch (NotSupportedException)
-                {
-                    throw new Exception($"GetTDXToken: {Constants.NOT_SUPPORTED_EXCEPTION}");
+                    throw new ExceptionFilter("GetAsync", ex);
                 }
             }
         }
@@ -105,6 +91,7 @@ namespace Opendata.Services
             {
                 var url = $"https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/TrainDate/{trainDate}";
                 var dailys = await this.GetAsyncs<DailyTimetable>(url, token);
+
                 return dailys.Select(x => new THSR()
                 {
                     Direction = x.DailyTrainInfo.Direction == 0 ? (byte)2 : x.DailyTrainInfo.Direction,
@@ -117,7 +104,7 @@ namespace Opendata.Services
                     CreateTime = DateTime.Now,
                     CreateUser = 0,
                     ModifyTime = DateTime.Now,
-                    ModifyUser = 0
+                    ModifyUser = 0,
                 });
             }
         }
@@ -138,5 +125,7 @@ namespace Opendata.Services
             }
             return false;
         }
+
+
     }
 }
