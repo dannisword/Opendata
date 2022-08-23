@@ -12,12 +12,13 @@ namespace Opendata.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                if (string.IsNullOrEmpty(token) == false)
-                {
-                    client.DefaultRequestHeaders.Add("authorization", $"Bearer {token}");
-                }
+
                 try
                 {
+                    if (string.IsNullOrEmpty(token) == false)
+                    {
+                        client.DefaultRequestHeaders.Add("authorization", $"Bearer {token}");
+                    }
                     var response = await client.GetStringAsync(url);
                     return JsonSerializer.Deserialize<T>(response);
                 }
@@ -32,28 +33,20 @@ namespace Opendata.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                if (string.IsNullOrEmpty(token) == false)
-                {
-                    client.DefaultRequestHeaders.Add("authorization", $"Bearer {token}");
-                }
                 try
                 {
+                    if (string.IsNullOrEmpty(token) == false)
+                    {
+                        client.DefaultRequestHeaders.Add("authorization", $"Bearer {token}");
+                    }
                     var response = await client.GetStringAsync(url);
                     return JsonSerializer.Deserialize<IEnumerable<T>>(response);
                 }
                 catch (Exception ex)
                 {
-                    //var msg = getExceptionMessage(ex);
                     throw new ExceptionFilter("GetAsyncs", ex);
                 }
             }
-        }
-
-
-        private void doThrow(string methName, string message)
-        {
-            var name = MethodBase.GetCurrentMethod().Name;
-            throw new Exception(name);
         }
 
         public async Task Success(string content)
@@ -65,7 +58,7 @@ namespace Opendata.Services
         {
             await this.WriteLineAsync(LogType.Waring, content);
         }
-
+        
         private async Task WriteLineAsync(LogType logType, string content)
         {
             var fileName = string.Format("{0}.log", DateTime.Now.ToString("yyyyMMdd"));

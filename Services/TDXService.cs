@@ -27,26 +27,38 @@ namespace Opendata.Services
 
         public async Task HandleDailyTimetable()
         {
-            var url = "https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/TrainDates";
             try
             {
                 var sb = new StringBuilder();
-                var tdx = await this.getTDXToken();
-                var timetables = await this.GetAsync<Timetables>(url, tdx.access_token);
+                var token = await this.getTDXToken();
+                // 取得高鐵每日時刻表所有供應的日期資料
+                var url = "https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/TrainDates";
+                var timetables = await this.GetAsync<Timetables>(url, token.access_token);
                 sb.AppendLine();
                 foreach (var item in timetables.TrainDates)
                 {
-                    var dailys = await this.getDailyTimetable(tdx.access_token, item);
+                    var dailys = await this.getDailyTimetable(token.access_token, item);
                     var content = $"轉檔日期：{item}, 車次筆數：{dailys.Count()}";
-                    sb.AppendLine(content);
+                    // 寫入資料庫
+                    var isSet = this.setTHSRs(dailys, item);
+                    // 失敗
+                    if (isSet == false)
+                    {
+                        sb.AppendLine($"轉檔日期：{item}, 車次筆數：{dailys.Count()}");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"轉檔日期：{item}, 車次轉入失敗");
+                    }
                 }
+                // 寫入紀錄
                 await this.Success(sb.ToString());
             }
             catch (ExceptionFilter e)
             {
                 await this.Waring($"方法: {e.MethName} 訊息: {e.Message}");
             }
-            catch(ArgumentOutOfRangeException)
+            catch (ArgumentOutOfRangeException)
             {
                 await this.Waring("方法: HandleDailyTimetable 訊息: 引數值超出例外狀況");
             }
@@ -58,8 +70,6 @@ namespace Opendata.Services
         private async Task<AccessToken> getTDXToken()
         {
             string baseUrl = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
-            MethodBase m = MethodBase.GetCurrentMethod();
-            var name = m.ReflectedType.Name;
             using (HttpClient httpClient = new HttpClient())
             {
                 try
@@ -84,7 +94,12 @@ namespace Opendata.Services
                 }
             }
         }
-
+        /// <summary>
+        /// 取得指定[日期]所有車次的車次資料
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="trainDate"></param>
+        /// <returns></returns>
         private async Task<IEnumerable<THSR>> getDailyTimetable(string token, string trainDate)
         {
             using (HttpClient client = new HttpClient())
@@ -108,24 +123,36 @@ namespace Opendata.Services
                 });
             }
         }
-        private async Task<bool> set()
+        /// <summary>
+        /// 設定車次資料
+        /// </summary>
+        /// <param name="records"></param>
+        /// <param name="trainDate"></param>
+        /// <returns></returns>
+        private bool setTHSRs(IEnumerable<THSR> records, string trainDate)
         {
             using (var context = new SQLContext(this._configuration))
             {
-                /*
-                var q = from a in context.THSRs
-                        where a.Memo == now
-                        select a;
-                if (q.Any() == false)
+                try
                 {
-                    context.THSRs.AddRange(records);
-                    context.SaveChanges();
-                }*/
+                    int eCode = 0;
+                    var q = from a in context.THSRs
+                            where a.Memo == trainDate
+                            select a;
+                    if (q.Any() == false)
+                    {
+                        context.THSRs.AddRange(records);
+                        eCode = context.SaveChanges();
+                    }
+                    return eCode > 0 ? true : false;
+                }
+                catch (Microsoft.Data.SqlClient.SqlException)
+                {
+                    this.Waring("資料庫寫入異常");
+                    return false;
+                }
 
             }
-            return false;
         }
-
-
     }
 }
