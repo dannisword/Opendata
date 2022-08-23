@@ -16,8 +16,9 @@ namespace Opendata.Services
         private readonly ILogger<TDXService> _logger;
         private readonly IConfiguration _configuration;
 
-        public TDXService(ILogger<TDXService> logger,
-                IConfiguration configuration)
+        public TDXService(
+            ILogger<TDXService> logger,
+            IConfiguration configuration)
         {
             this._logger = logger;
             this._configuration = configuration;
@@ -29,13 +30,13 @@ namespace Opendata.Services
             try
             {
                 var sb = new StringBuilder();
-                var token = await this.getTDXToken();
-                var timetables = await this.GetAsync<Timetables>(url, token.access_token);
+                var tdx = await this.getTDXToken();
+                var timetables = await this.GetAsync<Timetables>(url, tdx.access_token);
                 sb.AppendLine();
                 foreach (var item in timetables.TrainDates)
                 {
-                    var resp = await this.getDailyTimetable(token.access_token, item);
-                    var content = $"轉檔日期：{item}, 車次筆數：{resp.Count()}";
+                    var dailys = await this.getDailyTimetable(tdx.access_token, item);
+                    var content = $"轉檔日期：{item}, 車次筆數：{dailys.Count()}";
                     sb.AppendLine(content);
                 }
                 await this.Success(sb.ToString());
