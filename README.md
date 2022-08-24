@@ -1,4 +1,4 @@
-## 安裝 NetCore runtime
+## [安裝 NetCore runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - 調整資料表  
 ./Script/CourtVerdict.sql  
 ./Script/THSR.sql  
