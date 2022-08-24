@@ -9,6 +9,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScoped<DbContext, SQLContext>();
         services.AddHostedService<Worker>();
         services.AddSingleton<ITDXService, TDXService>();
+        services.AddSingleton<IOpendataService, OpendataService>();
     })
     .Build();
 

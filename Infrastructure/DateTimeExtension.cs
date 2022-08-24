@@ -13,7 +13,11 @@ namespace Opendata.Infrastructure
                 return dt;
             }
             return null;
+        }
 
+        public static DateTime Min(this DateTime value)
+        {
+            return new DateTime(value.Year, value.Month, value.Day, 0, 0, 0, 0);
         }
     }
 }

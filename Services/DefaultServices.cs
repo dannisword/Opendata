@@ -1,5 +1,5 @@
 using System.Text.Json;
-using System.Reflection;
+using System.Net.Http.Headers;
 
 using Opendata.Models;
 using Opendata.Infrastructure;
@@ -45,6 +45,26 @@ namespace Opendata.Services
                 catch (Exception ex)
                 {
                     throw new ExceptionFilter("GetAsyncs", ex);
+                }
+            }
+        }
+
+        public string PostRequest(string url, object obj)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    var buffer = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(obj));
+                    var content = new ByteArrayContent(buffer);
+                    content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                    var response = client.PostAsync(url, content).Result;
+                    var result = response.Content.ReadAsStringAsync().Result;
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
                 }
             }
         }

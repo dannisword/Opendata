@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
-using System.Reflection;
 
 using Opendata.Models;
 using Opendata.Entities;
@@ -37,6 +34,16 @@ namespace Opendata.Services
                 sb.AppendLine();
                 foreach (var item in timetables.TrainDates)
                 {
+                    var tmpDt = item.ToDateTime("yyyy-MM-dd");
+                    if (tmpDt == null)
+                    {
+                        continue;
+                    }
+                    if (tmpDt < DateTime.Now.Min())
+                    {
+                        continue;
+                    }
+                   
                     var dailys = await this.getDailyTimetable(token.access_token, item);
                     var content = $"轉檔日期：{item}, 車次筆數：{dailys.Count()}";
                     // 寫入資料庫
@@ -104,7 +111,7 @@ namespace Opendata.Services
         {
             using (HttpClient client = new HttpClient())
             {
-                var url = $"https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/TrainDate/{trainDate}";
+                var url = "https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/TrainDate/" + trainDate;
                 var dailys = await this.GetAsyncs<DailyTimetable>(url, token);
 
                 return dailys.Select(x => new THSR()
@@ -151,7 +158,6 @@ namespace Opendata.Services
                     this.Waring("資料庫寫入異常");
                     return false;
                 }
-
             }
         }
     }

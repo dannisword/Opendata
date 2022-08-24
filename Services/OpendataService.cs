@@ -8,35 +8,36 @@ using Opendata.Infrastructure;
 
 namespace Opendata.Services
 {
-
     // 裁決書
-    public class OpendataService
+    public class OpendataService : DefaultServices, IOpendataService
     {
-
-        public OpendataToken GetOpendataToken()
+        private readonly ILogger<IOpendataService> _logger;
+        private readonly IConfiguration _configuration;
+        public OpendataService(ILogger<IOpendataService> logger, IConfiguration configuration)
         {
-            var url = "https://data.judicial.gov.tw/jdg/api/Auth";
-
-            var auth = new Auth()
-            {
-                user = "dannis",
-                password = "Qwer890@"
-            };
-            var result = this.PostRequest(url, auth);
-            var token = JsonSerializer.Deserialize<OpendataToken>(result);
-
-            return token;
+            this._logger = logger;
+            this._configuration = configuration;
         }
-
-        public List<CourtVerdict> GetJDocs(OpendataToken token)
+        public void GetJDocs()
         {
+            this.Success($"裁決書開始下載");
+            var token = this.getToken();
             var url = "https://data.judicial.gov.tw/jdg/api/JList";
             var result = this.PostRequest(url, token);
             var jList = JsonSerializer.Deserialize<List<JList>>(result);
             var source = jList[0].list;
             var courts = new List<CourtVerdict>();
+            var count = 0;
             foreach (var item in source)
             {
+                //
+                count++;
+                var ids = item.Split(',');
+                var year = int.Parse(ids[1]);
+                if (year != (DateTime.Now.Year - 1911))
+                {
+                    continue;
+                }
                 url = "https://data.judicial.gov.tw/jdg/api/JDoc";
 
                 var p = new JParam()
@@ -53,36 +54,69 @@ namespace Opendata.Services
                     JYear = jDoc.JYEAR,
                     JNo = jDoc.JNO,
                     JDate = jDoc.JDATE,
-                    //JDate = jDoc.JDATE.ToDateTime(),
+                    //JDate = jDoc.JDATE.ToDateTime("yyyy-MM-dd").ToString(),
                     JCase = jDoc.JCASE,
                     JTitle = jDoc.JTITLE,
                     CreateTime = DateTime.Now,
-                    CreateUser = 0
+                    CreateUser = 0,
+                    ModifyTime = DateTime.Now,
+                    ModifyUser = 0
                 };
-                System.Diagnostics.Debug.WriteLine(item);
+                //System.Diagnostics.Debug.WriteLine($"{count}: {item}");
+                this._logger.LogInformation($"{count}: {item}");
                 courts.Add(court);
             }
-
-            return courts;
+            this.Success($"裁決書總下載筆數{courts.Count()}");
+            this.setCourtVerdict(courts);
         }
-
-        public string PostRequest(string url, object obj)
+        private OpendataToken getToken()
         {
-            using (HttpClient client = new HttpClient())
+            var url = "https://data.judicial.gov.tw/jdg/api/Auth";
+
+            var auth = new Auth()
             {
+                user = "dannis",
+                password = "Qwer890@"
+            };
+            var result = this.PostRequest(url, auth);
+            var token = JsonSerializer.Deserialize<OpendataToken>(result);
+            return token;
+        }
+        private bool setCourtVerdict(IEnumerable<CourtVerdict> records)
+        {
+            using (var context = new SQLContext(this._configuration))
+            {
+                var year = (DateTime.Now.Year - 1911);
+                var q = from a in context.CourtVerdicts
+                        where a.JYear == year.ToString()
+                        select a;
+                var docs = q.ToList();
+                var courts = new List<CourtVerdict>();
+                foreach (var record in records)
+                {
+                    if (record.JID == null)
+                    {
+                        continue;
+                    }
+                    var p = docs.Where(x => x.JID == record.JID);
+                    if (p.Any() == false)
+                    {
+                        courts.Add(record);
+                    }
+                }
                 try
                 {
-                    var buffer = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(obj));
-                    var content = new ByteArrayContent(buffer);
-                    content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-                    var response = client.PostAsync(url, content).Result;
-                    var result = response.Content.ReadAsStringAsync().Result;
-                    return result;
+                    context.CourtVerdicts.AddRange(courts);
+                    var count = context.SaveChanges();
+                    this.Success($"裁決書異動筆數{count}");
                 }
-                catch (Exception ex)
+                catch (Microsoft.Data.SqlClient.SqlException)
                 {
-                    return ex.Message;
+                    this.Waring("資料庫寫入異常");
+                    return false;
                 }
+
+                return false;
             }
         }
     }

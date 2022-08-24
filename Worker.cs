@@ -9,22 +9,26 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ITDXService _tdxService;
 
-    private readonly ITDXService _tdx;
+    private readonly IOpendataService _opendataService;
     public Worker(
         ILogger<Worker> logger,
         IConfiguration configuration,
-        ITDXService tdx)
+        ITDXService tdxService,
+        IOpendataService opendataService
+        )
     {
         this._logger = logger;
         this._configuration = configuration;
-        this._tdx = tdx;
+        this._tdxService = tdxService;
+        this._opendataService = opendataService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await this._tdx.HandleDailyTimetable();
-        var now = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
+        //await this._tdx.HandleDailyTimetable();
+        this._opendataService.GetJDocs();
         Environment.Exit(0);
     }
 }
