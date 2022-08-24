@@ -27,7 +27,7 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //await this._tdx.HandleDailyTimetable();
+        await this._tdxService.HandleDailyTimetable();
         this._opendataService.GetJDocs();
         Environment.Exit(0);
     }
