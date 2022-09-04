@@ -29,7 +29,8 @@ namespace Opendata.Services
             var result = this.PostRequest(url, token);
             var e = result.Contains("error");
             await this.Waring(result);
-            if (e == true){
+            if (e == true)
+            {
                 return;
             }
             var jList = JsonSerializer.Deserialize<List<JList>>(result);
@@ -47,11 +48,13 @@ namespace Opendata.Services
                 var data = this.PostRequest(url, p);
                 try
                 {
-                    var er = data.Contains("error");
-
+                    e = data.Contains("error");
+                    await this.Waring($"{item} - {data}");
+                    if (e == true)
+                    {
+                        continue;
+                    }
                     var jDoc = JsonSerializer.Deserialize<JDoc>(data);
-
-
                     if (jDoc.JID != null)
                     {
                         var doc = new JUDoc()
@@ -80,8 +83,8 @@ namespace Opendata.Services
                 }
                 catch (System.Text.Json.JsonException ex)
                 {
-                    this._logger.LogWarning(ex.Message);
-                    this.Waring(ex.Message);
+                    //this._logger.LogWarning(ex.Message);
+                    await this.Waring(ex.Message);
                 }
             }
 
