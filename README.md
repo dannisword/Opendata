@@ -16,3 +16,7 @@ yyyyMMdd.log
 - 高鐵資料表    THSR
 - 裁決書資料表  CourtVerdict
 
+
+
+
+MailKit

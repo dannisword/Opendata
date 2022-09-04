@@ -27,6 +27,8 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        //await new EmailSender().SendAsync("dannis.word@gmail.com", "TEST", "TEST");
+        //
         await this._tdxService.HandleDailyTimetable();
         //this._opendataService.GetJDocs();
         Environment.Exit(0);

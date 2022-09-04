@@ -18,9 +18,9 @@ namespace Opendata.Services
             this._logger = logger;
             this._configuration = configuration;
         }
-        public void GetJDocs()
+        public async Task GetJDocs()
         {
-            this.Success($"裁決書開始下載");
+            await this.Success($"裁決書開始下載");
             var token = this.getToken();
             var url = "https://data.judicial.gov.tw/jdg/api/JList";
             var result = this.PostRequest(url, token);
@@ -54,7 +54,6 @@ namespace Opendata.Services
                     JYear = jDoc.JYEAR,
                     JNo = jDoc.JNO,
                     JDate = jDoc.JDATE,
-                    //JDate = jDoc.JDATE.ToDateTime("yyyy-MM-dd").ToString(),
                     JCase = jDoc.JCASE,
                     JTitle = jDoc.JTITLE,
                     CreateTime = DateTime.Now,
@@ -66,7 +65,7 @@ namespace Opendata.Services
                 this._logger.LogInformation($"{count}: {item}");
                 courts.Add(court);
             }
-            this.Success($"裁決書總下載筆數{courts.Count()}");
+            await this.Success($"裁決書總下載筆數{courts.Count()}");
             this.setCourtVerdict(courts);
         }
         private OpendataToken getToken()

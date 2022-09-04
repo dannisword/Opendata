@@ -6,7 +6,7 @@ namespace Opendata.Infrastructure
     {
         public string MethName { get; set; }
 
-        public override string Message { get;  }
+        public override string Message { get; }
 
         public ExceptionFilter(string methName, Exception ex)
         {
@@ -30,6 +30,8 @@ namespace Opendata.Infrastructure
                     return "無效JSON";
                 case NotSupportedException:
                     return "方法不受支援";
+                case Microsoft.Data.SqlClient.SqlException:
+                    return "對資料庫操作產生的例外情況";
                 default:
                     return "未攔截例外狀況";
             }

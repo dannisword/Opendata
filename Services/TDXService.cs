@@ -43,31 +43,35 @@ namespace Opendata.Services
                     {
                         continue;
                     }
-                   
+
                     var dailys = await this.getDailyTimetable(token.access_token, item);
-                    var content = $"轉檔日期：{item}, 車次筆數：{dailys.Count()}";
+                    //sb.AppendFormat("<p>轉檔日期：{0}, 車次筆數：{1}</p>", item, dailys.Count());
                     // 寫入資料庫
                     var isSet = this.setTHSRs(dailys, item);
                     // 失敗
-                    if (isSet == false)
+                    if (isSet == true)
                     {
-                        sb.AppendLine($"轉檔日期：{item}, 車次筆數：{dailys.Count()}");
+                        
+                        sb.AppendFormat("<p>轉檔日期：{0}, 車次筆數：{1}</p>", item, dailys.Count());
                     }
                     else
                     {
-                        sb.AppendLine($"轉檔日期：{item}, 車次轉入失敗");
+                        sb.AppendLine($"<p>轉檔日期：{item}, 不需轉檔</p>");
                     }
                 }
                 // 寫入紀錄
-                await this.Success(sb.ToString());
+                await this.SendEmail(sb.ToString());
             }
             catch (ExceptionFilter e)
             {
-                await this.Waring($"方法: {e.MethName} 訊息: {e.Message}");
+                string msg = $"方法: {e.MethName} 訊息: {e.Message}";
+                await this.SendEmail(msg);
             }
             catch (ArgumentOutOfRangeException)
             {
-                await this.Waring("方法: HandleDailyTimetable 訊息: 引數值超出例外狀況");
+                string msg = "方法: HandleDailyTimetable 訊息: 引數值超出例外狀況";
+                await this.SendEmail(msg);
+                //await this.Waring("方法: HandleDailyTimetable 訊息: 引數值超出例外狀況");
             }
         }
         /// <summary>
@@ -142,6 +146,7 @@ namespace Opendata.Services
             {
                 try
                 {
+                   
                     int eCode = 0;
                     var q = from a in context.THSRs
                             where a.Memo == trainDate
@@ -153,10 +158,9 @@ namespace Opendata.Services
                     }
                     return eCode > 0 ? true : false;
                 }
-                catch (Microsoft.Data.SqlClient.SqlException)
+                catch (Microsoft.Data.SqlClient.SqlException ex)
                 {
-                    this.Waring("資料庫寫入異常");
-                    return false;
+                    throw new ExceptionFilter("資料庫寫入異常", ex);
                 }
             }
         }

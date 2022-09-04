@@ -14,7 +14,8 @@ namespace Opendata.Infrastructure
 
         public DbSet<THSR> THSRs { get; set; }
         public DbSet<CourtVerdict> CourtVerdicts { get; set; }
-
+        public DbSet<JUList> JLists { get; set; }
+        public DbSet<JUDoc> JDocs { get; set; }
         public SQLContext(IConfiguration configuration) : base()
         {
             this.connectString = configuration.GetSection("ConnectionStrings")["DefaultConnection"];

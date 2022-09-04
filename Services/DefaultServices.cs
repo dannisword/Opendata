@@ -69,6 +69,12 @@ namespace Opendata.Services
             }
         }
 
+        public async Task SendEmail(string content)
+        {
+            string subject = string.Format("{0}轉檔", DateTime.Now.ToString("yyyy-MM-dd"));
+            await new EmailSender().SendAsync("dannis.word@gmail.com", subject, content);
+            //
+        }
         public async Task Success(string content)
         {
             await this.WriteLineAsync(LogType.Success, content);
@@ -78,7 +84,7 @@ namespace Opendata.Services
         {
             await this.WriteLineAsync(LogType.Waring, content);
         }
-        
+
         private async Task WriteLineAsync(LogType logType, string content)
         {
             var fileName = string.Format("{0}.log", DateTime.Now.ToString("yyyyMMdd"));

@@ -4,6 +4,6 @@ namespace Opendata.Services
 {
     public interface IOpendataService
     {
-        void GetJDocs();
+        Task GetJDocs();
     }
 }
