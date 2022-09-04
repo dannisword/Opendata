@@ -18,9 +18,81 @@ namespace Opendata.Services
             this._logger = logger;
             this._configuration = configuration;
         }
+        /// <summary>
+        /// 裁
+        /// </summary>
+        /// <returns></returns>
+        public async Task GetJDocs2()
+        {
+            var token = this.getToken();
+            var url = "https://data.judicial.gov.tw/jdg/api/JList";
+            var result = this.PostRequest(url, token);
+            var e = result.Contains("error");
+            await this.Waring(result);
+            if (e == true){
+                return;
+            }
+            var jList = JsonSerializer.Deserialize<List<JList>>(result);
+            var source = jList[0].list;
+            this.setJUList(jList[0]);
+            var docs = new List<JUDoc>();
+            foreach (var item in source)
+            {
+                url = "https://data.judicial.gov.tw/jdg/api/JDoc";
+                var p = new JParam()
+                {
+                    Token = token.Token,
+                    J = item
+                };
+                var data = this.PostRequest(url, p);
+                try
+                {
+                    var er = data.Contains("error");
+
+                    var jDoc = JsonSerializer.Deserialize<JDoc>(data);
+
+
+                    if (jDoc.JID != null)
+                    {
+                        var doc = new JUDoc()
+                        {
+                            Attachments = jDoc.ATTACHMENTS == null ? "" : JsonSerializer.Serialize(jDoc.ATTACHMENTS),
+                            JID = jDoc.JID,
+                            JFullX = JsonSerializer.Serialize(jDoc.JFULLX),
+                            JYear = jDoc.JYEAR,
+                            JCase = jDoc.JCASE,
+                            JNO = jDoc.JNO,
+                            JDate = jDoc.JDATE,
+                            JTitle = jDoc.JTITLE,
+                            CreateTime = DateTime.Now,
+                            CreateUser = 0,
+                            ModifyTime = DateTime.Now,
+                            ModifyUser = 0
+                        };
+                        this._logger.LogInformation(doc.JID);
+                        using (var db = new SQLContext(this._configuration))
+                        {
+                            db.JDocs.Add(doc);
+                            db.SaveChanges();
+                        }
+                        docs.Add(doc);
+                    }
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    this._logger.LogWarning(ex.Message);
+                    this.Waring(ex.Message);
+                }
+            }
+
+            this.setJUDocs(docs);
+            // 新增資料庫
+        }
         public async Task GetJDocs()
         {
             await this.Success($"裁決書開始下載");
+            StringBuilder sb = new StringBuilder();
+
             var token = this.getToken();
             var url = "https://data.judicial.gov.tw/jdg/api/JList";
             var result = this.PostRequest(url, token);
@@ -80,6 +152,44 @@ namespace Opendata.Services
             var result = this.PostRequest(url, auth);
             var token = JsonSerializer.Deserialize<OpendataToken>(result);
             return token;
+        }
+
+        private bool setJUDocs(IEnumerable<JUDoc> data)
+        {
+            using (var db = new SQLContext(this._configuration))
+            {
+                db.JDocs.AddRange(data);
+                return db.SaveChanges() > 0 ? true : false;
+            }
+        }
+        private bool setJUList(JList data)
+        {
+            using (var db = new SQLContext(this._configuration))
+            {
+                var jList = new List<JUList>();
+                var q = from a in db.JLists
+                        where a.ListDate == data.date
+                        select a;
+                if (q.Any())
+                {
+                    return false;
+                }
+                foreach (var item in data.list)
+                {
+                    JUList list = new JUList()
+                    {
+                        ListDate = data.date,
+                        ListItem = item,
+                        CreateTime = DateTime.Now,
+                        CreateUser = 0,
+                        ModifyTime = DateTime.Now,
+                        ModifyUser = 0
+                    };
+                    jList.Add(list);
+                }
+                db.JLists.AddRange(jList);
+                return db.SaveChanges() > 0 ? true : false;
+            }
         }
         private bool setCourtVerdict(IEnumerable<CourtVerdict> records)
         {

@@ -21,6 +21,8 @@ namespace Opendata.Models
 
     public class JDoc
     {
+        public List<ATTACH> ATTACHMENTS  { get; set; }
+
         public string JID { get; set; }
 
         public string JYEAR { get; set; }
@@ -33,7 +35,7 @@ namespace Opendata.Models
 
         public string JTITLE { get; set; }
 
-        public JFULL JFULL { get; set; }
+        public JFULL JFULLX { get; set; }
     }
 
     public class JFULL
@@ -43,6 +45,12 @@ namespace Opendata.Models
         public string JFULLCONTENT { get; set; }
 
         public string JFULLPDF { get; set; }
+    }
+
+    public class ATTACH
+    {
+        public string TITLE { get; set; }
+        public string URL { get; set; }
     }
 
 }

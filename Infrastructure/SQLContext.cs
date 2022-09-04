@@ -27,7 +27,7 @@ namespace Opendata.Infrastructure
         {
             if (!optionsBuilder.IsConfigured)
             {
-                System.Diagnostics.Debug.WriteLine(this.connectString);
+                //System.Diagnostics.Debug.WriteLine(this.connectString);
                 optionsBuilder.UseSqlServer(this.connectString);
             }
         }

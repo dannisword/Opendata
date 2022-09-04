@@ -27,10 +27,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //await new EmailSender().SendAsync("dannis.word@gmail.com", "TEST", "TEST");
         //
-        await this._tdxService.HandleDailyTimetable();
-        //this._opendataService.GetJDocs();
+        //await this._tdxService.HandleDailyTimetable();
+
+        await this._opendataService.GetJDocs2();
         Environment.Exit(0);
     }
 }

@@ -7,7 +7,7 @@ public class JUList
     [Key]
     public int ID { get; set; }
 
-    public DateTime ListDate { get; set; }
+    public string ListDate { get; set; }
 
     public string ListItem { get; set; }
 

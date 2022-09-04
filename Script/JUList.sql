@@ -4,7 +4,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[JUList](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
-    [ListDate] [datetime] NOT NULL,
+    [ListDate] [nvarchar](12) NOT NULL,
     [ListItem] [nvarchar](50) NOT NULL,
 	[CreateTime] [datetime] NULL,
 	[CreateUser] [int] NULL,
