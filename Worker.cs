@@ -27,9 +27,9 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //
-        //await this._tdxService.HandleDailyTimetable();
-
+        // 高鐵轉檔
+        await this._tdxService.HandleDailyTimetable();
+        // 裁決書
         await this._opendataService.GetJDocs2();
         Environment.Exit(0);
     }
