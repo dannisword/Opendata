@@ -83,7 +83,7 @@ namespace Opendata.Services
                 }
                 catch (System.Text.Json.JsonException ex)
                 {
-                    //this._logger.LogWarning(ex.Message);
+                    this._logger.LogWarning(ex.Message);
                     await this.Waring(ex.Message);
                 }
             }
